@@ -1,15 +1,13 @@
-import mercury200
+import mercury200 as m
 import serial
 
-command = mercury200.make_command('266608','28')
-print command
 
-sp = serial.Serial("COM5")
 
-sp.write(command)
-response = sp.read(13)
+
+print m.get_version('266607','COM5',5)
+
 
 
 
 #sp.write("")
-sp.close()
+
