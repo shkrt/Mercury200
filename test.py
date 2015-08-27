@@ -1,13 +1,12 @@
 import mercury200 as m
-import serial
+
+try:
+    print m.get_serial_number('266608','COM5',1)
+except m.TimeoutError:
+    print "suck because of timeout"
 
 
 
 
-print m.get_version('266607','COM5',5)
 
-
-
-
-#sp.write("")
 
