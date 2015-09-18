@@ -19,6 +19,17 @@ func PrepareCommand(netNumber *string, code byte) []byte {
 	return command
 }
 
+func PrepareSetterCommand(netNumber *string, code byte, info *[]byte) []byte {
+	command := make([]byte, 1)
+	command[0] = 0
+	command = append(command, util.NetNumToArr(*netNumber)...)
+	command = append(command, code)
+	command = append(command, *info...)
+	var crc = util.GetCrcBytes(command)
+	command = append(command, crc...)
+	return command
+}
+
 func PerformCommand(command []byte, portname *string, timeout *int, baud *int, respLen int) ([]byte, bool) {
 
 	c := &serial.Config{Name: *portname, Baud: *baud, ReadTimeout: time.Second * time.Duration(*timeout)}
@@ -150,6 +161,17 @@ func GetManualCorrectionAmount(netNumber *string, portname *string, timeout *int
 
 //SET COMMANDS
 
-func SetCurrentTime(netNumber *string, portname *string, timeout *int, baud *int) bool {
-	command := PrepareCommand(netNumber, 2)
+func SetCurrentTime(netNumber *string, portname *string, timeout *int, baud *int, timeToSet time.Time) bool {
+	timeP := make([]byte, 7)
+	timeP[0] = byte(timeToSet.Weekday())
+	timeP[1] = byte(timeToSet.Hour())
+	timeP[2] = byte(timeToSet.Minute())
+	timeP[3] = byte(timeToSet.Second())
+	timeP[4] = byte(timeToSet.Day())
+	timeP[5] = byte(timeToSet.Month())
+	fmt.Println(timeToSet.Year())
+	timeP[6] = byte(timeToSet.Year())
+	fmt.Println(timeP)
+	//command := PrepareSetterCommand(netNumber, 2, &timeP)
+	return false
 }
