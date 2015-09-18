@@ -50,7 +50,7 @@ func PerformCommand(command []byte, portname *string, timeout *int, baud *int, r
 
 }
 
-//COUNTER COMMANDS
+// GET COMMANDS
 
 func GetVersion(netNumber *string, portname *string, timeout *int, baud *int) string {
 	command := PrepareCommand(netNumber, 40)
@@ -98,7 +98,7 @@ func GetLastTurnOnTime(netNumber *string, portname *string, timeout *int, baud *
 	command := PrepareCommand(netNumber, 44)
 	val, res := PerformCommand(command, portname, timeout, baud, 14)
 	if res == true {
-		return fmt.Sprintf("%02x.%02x.%02x %02x:%02x:%02x", val[9], val[10], val[11], val[6], val[7], val[8])
+		return fmt.Sprintf("%02x.%02x.%02x %02x:%02x:%02x %s", val[9], val[10], val[11], val[6], val[7], val[8], time.Weekday(val[5]))
 	} else {
 		return "FAIL"
 	}
@@ -108,8 +108,48 @@ func GetLastTurnOffTime(netNumber *string, portname *string, timeout *int, baud 
 	command := PrepareCommand(netNumber, 43)
 	val, res := PerformCommand(command, portname, timeout, baud, 14)
 	if res == true {
-		return fmt.Sprintf("%02x.%02x.%02x %02x:%02x:%02x", val[9], val[10], val[11], val[6], val[7], val[8])
+		return fmt.Sprintf("%02x.%02x.%02x %02x:%02x:%02x %s", val[9], val[10], val[11], val[6], val[7], val[8], time.Weekday(val[5]))
 	} else {
 		return "FAIL"
 	}
+}
+
+func GetCurrentTime(netNumber *string, portname *string, timeout *int, baud *int) string {
+	command := PrepareCommand(netNumber, 33)
+	val, res := PerformCommand(command, portname, timeout, baud, 14)
+	if res == true {
+		return fmt.Sprintf("%02x.%02x.%02x %02x:%02x:%02x %s", val[9], val[10], val[11], val[6], val[7], val[8], time.Weekday(val[5]))
+	} else {
+		return "FAIL"
+	}
+}
+
+func GetSeasonSwitchFlag(netNumber *string, portname *string, timeout *int, baud *int) string {
+	command := PrepareCommand(netNumber, 36)
+	val, res := PerformCommand(command, portname, timeout, baud, 8)
+	if res == true {
+		if val[5] == 0 {
+			return "Switch is disabled"
+		} else {
+			return "Switch is enabled"
+		}
+	} else {
+		return "FAIL"
+	}
+}
+
+func GetManualCorrectionAmount(netNumber *string, portname *string, timeout *int, baud *int) string {
+	command := PrepareCommand(netNumber, 37)
+	val, res := PerformCommand(command, portname, timeout, baud, 8)
+	if res == true {
+		return fmt.Sprintf("%02d", val[5])
+	} else {
+		return "FAIL"
+	}
+}
+
+//SET COMMANDS
+
+func SetCurrentTime(netNumber *string, portname *string, timeout *int, baud *int) bool {
+	command := PrepareCommand(netNumber, 2)
 }

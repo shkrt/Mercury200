@@ -10,6 +10,6 @@ func main() {
 	port := "COM5"
 	timeOut := 5
 	baudRate := 9600
-	result := commands.GetLastTurnOffTime(&netNum, &port, &timeOut, &baudRate)
+	result := commands.GetManualCorrectionAmount(&netNum, &port, &timeOut, &baudRate)
 	fmt.Println(result)
 }
