@@ -7,8 +7,8 @@ import (
 )
 
 func main() {
-	netNum := "266608"
-	port := "COM5"
+	netNum := "159273"
+	port := "COM12"
 	timeOut := 5
 	baudRate := 9600
 	result := commands.SetCurrentTime(&netNum, &port, &timeOut, &baudRate, time.Now())

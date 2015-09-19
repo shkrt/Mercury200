@@ -164,14 +164,30 @@ func GetManualCorrectionAmount(netNumber *string, portname *string, timeout *int
 func SetCurrentTime(netNumber *string, portname *string, timeout *int, baud *int, timeToSet time.Time) bool {
 	timeP := make([]byte, 7)
 	timeP[0] = byte(timeToSet.Weekday())
-	timeP[1] = byte(timeToSet.Hour())
-	timeP[2] = byte(timeToSet.Minute())
-	timeP[3] = byte(timeToSet.Second())
-	timeP[4] = byte(timeToSet.Day())
-	timeP[5] = byte(timeToSet.Month())
-	fmt.Println(timeToSet.Year())
-	timeP[6] = byte(timeToSet.Year())
-	fmt.Println(timeP)
-	//command := PrepareSetterCommand(netNumber, 2, &timeP)
-	return false
+
+	h, _ := strconv.ParseInt(strconv.Itoa(timeToSet.Hour()), 16, 64)
+	timeP[1] = byte(h)
+
+	h, _ = strconv.ParseInt(strconv.Itoa(timeToSet.Minute()), 16, 64)
+	timeP[2] = byte(h)
+
+	h, _ = strconv.ParseInt(strconv.Itoa(timeToSet.Second()), 16, 64)
+	timeP[3] = byte(h)
+
+	h, _ = strconv.ParseInt(strconv.Itoa(timeToSet.Day()), 16, 64)
+	timeP[4] = byte(h)
+
+	h, _ = strconv.ParseInt(fmt.Sprintf("%d", timeToSet.Month()), 16, 64)
+	timeP[5] = byte(h)
+
+	h, _ = strconv.ParseInt(strconv.Itoa(timeToSet.Year())[2:4], 16, 64)
+	timeP[6] = byte(h)
+
+	command := PrepareSetterCommand(netNumber, 2, &timeP)
+	_, res := PerformCommand(command, portname, timeout, baud, 7)
+	if res == true {
+		return true
+	} else {
+		return false
+	}
 }
