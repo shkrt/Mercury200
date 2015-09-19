@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"mercury200/commands"
-	"time"
+	//"time"
 )
 
 func main() {
@@ -11,6 +11,6 @@ func main() {
 	port := "COM12"
 	timeOut := 5
 	baudRate := 9600
-	result := commands.SetCurrentTime(&netNum, &port, &timeOut, &baudRate, time.Now())
+	result := commands.GetTariffsDisplayOptions(&netNum, &port, &timeOut, &baudRate)
 	fmt.Println(result)
 }

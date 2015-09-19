@@ -12,7 +12,7 @@ func SplitEvery(source string, step int) []string {
 	pos := 0
 	for i, v := range source {
 		res += string(v)
-		if (i+1)%step == 0 && i != 0 {
+		if (i+1)%step == 0 {
 			result[pos] = res
 			pos++
 			res = ""

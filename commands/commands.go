@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"errors"
 	"fmt"
 	"github.com/tarm/serial"
 	"log"
@@ -8,6 +9,14 @@ import (
 	"strconv"
 	"time"
 )
+
+type DisplayIntervals struct {
+	InactiveTEnergy, ActiveTEnergy, Instants, Additionals int
+}
+
+type TariffsDisplayOptions struct {
+	T1, T2, T3, T4, TSumm bool
+}
 
 func PrepareCommand(netNumber *string, code byte) []byte {
 	command := make([]byte, 1)
@@ -67,7 +76,7 @@ func GetVersion(netNumber *string, portname *string, timeout *int, baud *int) st
 	command := PrepareCommand(netNumber, 40)
 	val, res := PerformCommand(command, portname, timeout, baud, 13)
 	if res == true {
-		return fmt.Sprintf("%0x.%0x", val[5], val[6])
+		return fmt.Sprintf("%0x.%0x.%0x (%02x.%02x.%02x)", val[5], val[6], val[7], val[8], val[9], val[10])
 	} else {
 		return "FAIL"
 	}
@@ -149,6 +158,34 @@ func GetSeasonSwitchFlag(netNumber *string, portname *string, timeout *int, baud
 	}
 }
 
+func GetLastOpenedTime(netNumber *string, portname *string, timeout *int, baud *int) (string, error) {
+	command := PrepareCommand(netNumber, 97)
+	val, res := PerformCommand(command, portname, timeout, baud, 14)
+	if res == true {
+		if val[5] < 8 {
+			return fmt.Sprintf("%02x.%02x.%02x %02x:%02x:%02x %s", val[9], val[10], val[11], val[6], val[7], val[8], time.Weekday(val[5])), nil
+		} else {
+			return "--:--", nil
+		}
+	} else {
+		return "FAIL", errors.New("No data")
+	}
+}
+
+func GetLastClosedTime(netNumber *string, portname *string, timeout *int, baud *int) (string, error) {
+	command := PrepareCommand(netNumber, 98)
+	val, res := PerformCommand(command, portname, timeout, baud, 14)
+	if res == true {
+		if val[5] < 8 {
+			return fmt.Sprintf("%02x.%02x.%02x %02x:%02x:%02x %s", val[9], val[10], val[11], val[6], val[7], val[8], time.Weekday(val[5])), nil
+		} else {
+			return "--:--", nil
+		}
+	} else {
+		return "FAIL", errors.New("No data")
+	}
+}
+
 func GetManualCorrectionAmount(netNumber *string, portname *string, timeout *int, baud *int) string {
 	command := PrepareCommand(netNumber, 37)
 	val, res := PerformCommand(command, portname, timeout, baud, 8)
@@ -156,6 +193,40 @@ func GetManualCorrectionAmount(netNumber *string, portname *string, timeout *int
 		return fmt.Sprintf("%02d", val[5])
 	} else {
 		return "FAIL"
+	}
+}
+
+func GetDisplayIntervals(netNumber *string, portname *string, timeout *int, baud *int) DisplayIntervals {
+	result := DisplayIntervals{-1, -1, -1, -1}
+	p := &result
+	command := PrepareCommand(netNumber, 103)
+	val, res := PerformCommand(command, portname, timeout, baud, 11)
+	if res == true {
+		p.InactiveTEnergy = int(val[5])
+		p.ActiveTEnergy = int(val[6])
+		p.Instants = int(val[7])
+		p.Additionals = int(val[8])
+		return result
+	} else {
+		return result
+	}
+}
+
+func GetTariffsDisplayOptions(netNumber *string, portname *string, timeout *int, baud *int) TariffsDisplayOptions {
+	result := TariffsDisplayOptions{false, false, false, false, false}
+	p := &result
+	command := PrepareCommand(netNumber, 42)
+	val, res := PerformCommand(command, portname, timeout, baud, 8)
+	if res == true {
+		b := util.SplitEvery(fmt.Sprintf("%0b", val[5]), 1)
+		p.T1, _ = strconv.ParseBool(b[4])
+		p.T2, _ = strconv.ParseBool(b[3])
+		p.T3, _ = strconv.ParseBool(b[2])
+		p.T4, _ = strconv.ParseBool(b[1])
+		p.TSumm, _ = strconv.ParseBool(b[0])
+		return result
+	} else {
+		return result
 	}
 }
 
@@ -190,4 +261,45 @@ func SetCurrentTime(netNumber *string, portname *string, timeout *int, baud *int
 	} else {
 		return false
 	}
+}
+
+func SetSeasonSwitchFlag(netNumber *string, portname *string, timeout *int, baud *int, flag bool) bool {
+	tail := make([]byte, 1)
+
+	if flag == true {
+		tail[0] = 255
+	} else {
+		tail[0] = 0
+	}
+
+	command := PrepareSetterCommand(netNumber, 5, &tail)
+	_, res := PerformCommand(command, portname, timeout, baud, 7)
+	if res == true {
+		return true
+	} else {
+		return false
+	}
+}
+
+func SetManualCorrectionAmount(netNumber *string, portname *string, timeout *int, baud *int, amount uint) (bool, error) {
+	tail := make([]byte, 1)
+
+	if amount <= 89 {
+		tail[0] = byte(amount)
+	} else {
+		return false, errors.New("Amount must be between 0 and 89")
+	}
+
+	command := PrepareSetterCommand(netNumber, 6, &tail)
+	_, res := PerformCommand(command, portname, timeout, baud, 7)
+	if res == true {
+		return true, nil
+	} else {
+		return false, nil
+	}
+}
+
+func SetTariffsDisplayOptions(netNumber *string, portname *string, timeout *int, baud *int, mask int) bool {
+	return false
+
 }
