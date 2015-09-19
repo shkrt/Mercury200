@@ -11,6 +11,11 @@ func main() {
 	port := "COM12"
 	timeOut := 5
 	baudRate := 9600
-	result := commands.GetTariffsDisplayOptions(&netNum, &port, &timeOut, &baudRate)
+	z := make([]string, 4)
+	z[0] = "T1"
+	z[1] = "T2"
+	z[3] = "T4"
+	z[2] = "TSumm"
+	result := commands.SetTariffsDisplayOptions(&netNum, &port, &timeOut, &baudRate, z)
 	fmt.Println(result)
 }

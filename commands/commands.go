@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"github.com/tarm/serial"
@@ -12,10 +13,6 @@ import (
 
 type DisplayIntervals struct {
 	InactiveTEnergy, ActiveTEnergy, Instants, Additionals int
-}
-
-type TariffsDisplayOptions struct {
-	T1, T2, T3, T4, TSumm bool
 }
 
 func PrepareCommand(netNumber *string, code byte) []byte {
@@ -212,21 +209,26 @@ func GetDisplayIntervals(netNumber *string, portname *string, timeout *int, baud
 	}
 }
 
-func GetTariffsDisplayOptions(netNumber *string, portname *string, timeout *int, baud *int) TariffsDisplayOptions {
-	result := TariffsDisplayOptions{false, false, false, false, false}
-	p := &result
+func GetTariffsDisplayOptions(netNumber *string, portname *string, timeout *int, baud *int) []string {
+	r := make([]string, 5)
+	m := make(map[string]string)
 	command := PrepareCommand(netNumber, 42)
 	val, res := PerformCommand(command, portname, timeout, baud, 8)
 	if res == true {
 		b := util.SplitEvery(fmt.Sprintf("%0b", val[5]), 1)
-		p.T1, _ = strconv.ParseBool(b[4])
-		p.T2, _ = strconv.ParseBool(b[3])
-		p.T3, _ = strconv.ParseBool(b[2])
-		p.T4, _ = strconv.ParseBool(b[1])
-		p.TSumm, _ = strconv.ParseBool(b[0])
-		return result
+		m["T1"] = b[4]
+		m["T2"] = b[3]
+		m["T3"] = b[2]
+		m["T4"] = b[1]
+		m["TSumm"] = b[0]
+		for k, v := range m {
+			if v == "1" {
+				r = append(r, k)
+			}
+		}
+		return r
 	} else {
-		return result
+		return r
 	}
 }
 
@@ -299,7 +301,56 @@ func SetManualCorrectionAmount(netNumber *string, portname *string, timeout *int
 	}
 }
 
-func SetTariffsDisplayOptions(netNumber *string, portname *string, timeout *int, baud *int, mask int) bool {
-	return false
+func SetTariffsDisplayOptions(netNumber *string, portname *string, timeout *int, baud *int, lst []string) bool {
+	var s bytes.Buffer
+	m := make(map[string]bool)
 
+	for _, v := range lst {
+		m[v] = true
+	}
+
+	s.WriteString("000")
+
+	if m["TSumm"] {
+		s.WriteString("1")
+		fmt.Println(s[2])
+	} else {
+		s.WriteString("0")
+
+	}
+
+	if m["T4"] {
+		s.WriteString("1")
+	} else {
+		s.WriteString("0")
+	}
+
+	if m["T3"] {
+		s.WriteString("1")
+	} else {
+		s.WriteString("0")
+	}
+
+	if m["T2"] {
+		s.WriteString("1")
+	} else {
+		s.WriteString("0")
+	}
+
+	if m["T1"] {
+		s.WriteString("1")
+	} else {
+		s.WriteString("0")
+	}
+
+	e, _ := strconv.ParseInt(s.String(), 2, 64)
+	tail := make([]byte, 1)
+	tail[0] = byte(e)
+	command := PrepareSetterCommand(netNumber, 9, &tail)
+	_, res := PerformCommand(command, portname, timeout, baud, 7)
+	if res == true {
+		return true
+	} else {
+		return false
+	}
 }
