@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"mercury200/commands"
-	//"time"
+	//"mercury200/types"
 )
 
 func main() {
@@ -11,11 +11,8 @@ func main() {
 	port := "COM12"
 	timeOut := 5
 	baudRate := 9600
-	z := make([]string, 4)
-	z[0] = "T1"
-	z[1] = "T2"
-	z[3] = "T4"
-	z[2] = "TSumm"
-	result := commands.SetTariffsDisplayOptions(&netNum, &port, &timeOut, &baudRate, z)
+	//z := types.DisplayIntervals{10, 30, 15, 42}
+
+	result := commands.GetTariffsDisplayOptions(&netNum, &port, &timeOut, &baudRate)
 	fmt.Println(result)
 }

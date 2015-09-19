@@ -1,19 +1,15 @@
 package commands
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"github.com/tarm/serial"
 	"log"
+	"mercury200/types"
 	"mercury200/util"
 	"strconv"
 	"time"
 )
-
-type DisplayIntervals struct {
-	InactiveTEnergy, ActiveTEnergy, Instants, Additionals int
-}
 
 func PrepareCommand(netNumber *string, code byte) []byte {
 	command := make([]byte, 1)
@@ -193,8 +189,8 @@ func GetManualCorrectionAmount(netNumber *string, portname *string, timeout *int
 	}
 }
 
-func GetDisplayIntervals(netNumber *string, portname *string, timeout *int, baud *int) DisplayIntervals {
-	result := DisplayIntervals{-1, -1, -1, -1}
+func GetDisplayIntervals(netNumber *string, portname *string, timeout *int, baud *int) types.DisplayIntervals {
+	result := types.DisplayIntervals{-1, -1, -1, -1}
 	p := &result
 	command := PrepareCommand(netNumber, 103)
 	val, res := PerformCommand(command, portname, timeout, baud, 11)
@@ -210,17 +206,21 @@ func GetDisplayIntervals(netNumber *string, portname *string, timeout *int, baud
 }
 
 func GetTariffsDisplayOptions(netNumber *string, portname *string, timeout *int, baud *int) []string {
-	r := make([]string, 5)
+	r := make([]string, 8)
 	m := make(map[string]string)
 	command := PrepareCommand(netNumber, 42)
 	val, res := PerformCommand(command, portname, timeout, baud, 8)
 	if res == true {
-		b := util.SplitEvery(fmt.Sprintf("%0b", val[5]), 1)
-		m["T1"] = b[4]
-		m["T2"] = b[3]
-		m["T3"] = b[2]
-		m["T4"] = b[1]
-		m["TSumm"] = b[0]
+		b := util.SplitEvery(fmt.Sprintf("%08b", val[5]), 1)
+		m["Date"] = b[0]
+		m["Time"] = b[1]
+		m["Power"] = b[2]
+		m["TSumm"] = b[3]
+		m["T4"] = b[4]
+		m["T3"] = b[5]
+		m["T2"] = b[6]
+		m["T1"] = b[7]
+
 		for k, v := range m {
 			if v == "1" {
 				r = append(r, k)
@@ -302,51 +302,65 @@ func SetManualCorrectionAmount(netNumber *string, portname *string, timeout *int
 }
 
 func SetTariffsDisplayOptions(netNumber *string, portname *string, timeout *int, baud *int, lst []string) bool {
-	var s bytes.Buffer
+	s := []byte("00000000")
 	m := make(map[string]bool)
 
 	for _, v := range lst {
 		m[v] = true
 	}
 
-	s.WriteString("000")
+	if m["Date"] {
+		s[0] = 49
+	}
+
+	if m["Time"] {
+		s[1] = 49
+	}
+
+	if m["Power"] {
+		s[2] = 49
+	}
 
 	if m["TSumm"] {
-		s.WriteString("1")
-		fmt.Println(s[2])
-	} else {
-		s.WriteString("0")
-
+		s[3] = 49
 	}
 
 	if m["T4"] {
-		s.WriteString("1")
-	} else {
-		s.WriteString("0")
+		s[4] = 49
 	}
 
 	if m["T3"] {
-		s.WriteString("1")
-	} else {
-		s.WriteString("0")
+		s[5] = 49
 	}
 
 	if m["T2"] {
-		s.WriteString("1")
-	} else {
-		s.WriteString("0")
+		s[6] = 49
 	}
 
 	if m["T1"] {
-		s.WriteString("1")
-	} else {
-		s.WriteString("0")
+		s[7] = 49
 	}
 
-	e, _ := strconv.ParseInt(s.String(), 2, 64)
+	e, _ := strconv.ParseInt(string(s), 2, 64)
 	tail := make([]byte, 1)
 	tail[0] = byte(e)
 	command := PrepareSetterCommand(netNumber, 9, &tail)
+	_, res := PerformCommand(command, portname, timeout, baud, 7)
+	if res == true {
+		return true
+	} else {
+		return false
+	}
+}
+
+func SetDisplayIntervals(netNumber *string, portname *string, timeout *int, baud *int, intervals *types.DisplayIntervals) bool {
+	tail := make([]byte, 4)
+	tail[0] = byte(intervals.InactiveTEnergy)
+	tail[1] = byte(intervals.ActiveTEnergy)
+	tail[2] = byte(intervals.Instants)
+	tail[3] = byte(intervals.Additionals)
+
+	command := PrepareSetterCommand(netNumber, 13, &tail)
 	_, res := PerformCommand(command, portname, timeout, baud, 7)
 	if res == true {
 		return true
