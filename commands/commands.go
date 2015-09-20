@@ -287,6 +287,8 @@ func GetHolidays(netNumber *string, portname *string, timeout *int, baud *int) (
 					m, _ := strconv.Atoi(fmt.Sprintf("%x", val[j+1]))
 					h := fmt.Sprintf("%s,%0x", time.Month(m), val[j])
 					result = append(result, h)
+				} else {
+					return result, nil
 				}
 			}
 		} else {
@@ -516,15 +518,19 @@ func SetHolidays(netNumber *string, portname *string, timeout *int, baud *int, h
 	}
 
 	for _, v := range holidays {
-		date, _ := time.Parse(shortForm, v)
-		month := int(date.Month())
-		day, _ := (strconv.ParseInt(strconv.Itoa(date.Day()), 16, 64))
-		tail = append(tail, byte(day))
-		tail = append(tail, byte(month))
+		if v != "" {
+			date, _ := time.Parse(shortForm, v)
+			month := int(date.Month())
+			day, _ := (strconv.ParseInt(strconv.Itoa(date.Day()), 16, 64))
+			tail = append(tail, byte(day))
+			tail = append(tail, byte(month))
+		}
+
 	}
 
 	lng := len(tail)
 	rem := lng % 16
+
 	if rem != 0 {
 		for i := 0; i <= 16-rem; i++ {
 			tail = append(tail, 255)
