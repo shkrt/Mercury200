@@ -275,14 +275,20 @@ func GetTariffsCount(netNumber *string, portname *string, timeout *int, baud *in
 }
 
 func GetHolidays(netNumber *string, portname *string, timeout *int, baud *int) ([]string, error) {
-	result := make([]string, 16)
+	result := make([]string, 0)
 	tail := make([]byte, 1)
 	for i := 0; i < 2; i++ {
 		tail[0] = byte(i)
 		command := PrepareSetterCommand(netNumber, 48, &tail)
 		val, res := PerformCommand(command, portname, timeout, baud, 23)
 		if res == true {
-			fmt.Println(val)
+			for j := 5; j < 21; j += 2 {
+				if val[j] != 255 {
+					m, _ := strconv.Atoi(fmt.Sprintf("%x", val[j+1]))
+					h := fmt.Sprintf("%s,%0x", time.Month(m), val[j])
+					result = append(result, h)
+				}
+			}
 		} else {
 			return result, errors.New("unable to fetch holidays data")
 		}
@@ -500,4 +506,33 @@ func SetTariffsCount(netNumber *string, portname *string, timeout *int, baud *in
 	}
 
 	return false, nil
+}
+
+func SetHolidays(netNumber *string, portname *string, timeout *int, baud *int, holidays []string) bool {
+	tail := make([]byte, 0)
+	const shortForm = "January,2"
+
+	for _, v := range holidays {
+		date, _ := time.Parse(shortForm, v)
+		month := int(date.Month())
+		day, _ := (strconv.ParseInt(strconv.Itoa(date.Day()), 16, 64))
+		tail = append(tail, byte(day))
+		tail = append(tail, byte(month))
+	}
+
+	if len(tail)%16 != 0 {
+		for i := len(tail); i < 16; i++ {
+			tail = append(tail, 255)
+		}
+	}
+
+	tail = append(tail, 0)
+
+	command := PrepareSetterCommand(netNumber, 16, &tail)
+	_, res := PerformCommand(command, portname, timeout, baud, 7)
+	if res == true {
+		return true
+	}
+	fmt.Println(tail)
+	return false
 }

@@ -11,8 +11,16 @@ func main() {
 	port := "COM12"
 	timeOut := 5
 	baudRate := 9600
-	//z := types.TariffsDisplayOptions{"0", "0", "1", "1", "0", "0", "1", "1"}
+	z := make([]string, 5)
+	z[0] = "January,5"
+	z[1] = "January,15"
 
-	result, _ := commands.GetHolidays(&netNum, &port, &timeOut, &baudRate)
+	z[2] = "February,5"
+
+	z[3] = "March,5"
+
+	z[4] = "April,25"
+
+	result := commands.SetHolidays(&netNum, &port, &timeOut, &baudRate, z)
 	fmt.Println(result)
 }
