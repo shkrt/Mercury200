@@ -299,6 +299,43 @@ func GetHolidays(netNumber *string, portname *string, timeout *int, baud *int) (
 	return result, nil
 }
 
+func GetEnergyFromReset(netNumber *string, portname *string, timeout *int, baud *int) *types.Energy {
+	energy := types.Energy{}
+	p := &energy
+	command := PrepareCommand(netNumber, 39)
+	val, res := PerformCommand(command, portname, timeout, baud, 23)
+	if res == true {
+		p.T1 = fmt.Sprintf("%x%x%x.%x", val[5], val[6], val[7], val[8])
+		p.T2 = fmt.Sprintf("%x%x%x.%x", val[9], val[10], val[11], val[12])
+		p.T3 = fmt.Sprintf("%x%x%x.%x", val[13], val[14], val[15], val[16])
+		p.T4 = fmt.Sprintf("%x%x%x.%x", val[17], val[18], val[19], val[20])
+	}
+	return p
+}
+
+func GetEnergyAtMonthStart(netNumber *string, portname *string, timeout *int, baud *int, month int) (*types.Energy, error) {
+	energy := types.Energy{}
+	p := &energy
+
+	if month < 1 || month > 12 {
+		return p, errors.New("month should be between 0 and 12")
+	}
+
+	tail := make([]byte, 1)
+	tail[0] = byte(month - 1)
+	command := PrepareSetterCommand(netNumber, 50, &tail)
+	val, res := PerformCommand(command, portname, timeout, baud, 23)
+
+	if res == true {
+		p.T1 = fmt.Sprintf("%x%x%x.%x", val[5], val[6], val[7], val[8])
+		p.T2 = fmt.Sprintf("%x%x%x.%x", val[9], val[10], val[11], val[12])
+		p.T3 = fmt.Sprintf("%x%x%x.%x", val[13], val[14], val[15], val[16])
+		p.T4 = fmt.Sprintf("%x%x%x.%x", val[17], val[18], val[19], val[20])
+	}
+
+	return p, nil
+}
+
 //SET COMMANDS
 
 func SetCurrentTime(netNumber *string, portname *string, timeout *int, baud *int, timeToSet time.Time) bool {

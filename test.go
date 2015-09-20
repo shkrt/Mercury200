@@ -12,7 +12,7 @@ func main() {
 	timeOut := 5
 	baudRate := 9600
 
-	result, _ := commands.GetHolidays(&netNum, &port, &timeOut, &baudRate)
+	result, _ := commands.GetEnergyAtMonthStart(&netNum, &port, &timeOut, &baudRate, 12)
 	fmt.Println(result)
 	//fmt.Print(17 % 16)
 }
