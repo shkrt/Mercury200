@@ -56,11 +56,12 @@ func PerformCommand(command []byte, portname *string, timeout *int, baud *int, r
 	}
 
 	if util.CheckCrc(buf[:n], respLen) {
+		s.Close()
 		return buf[:n], true
 	} else {
+		s.Close()
 		return buf, false
 	}
-
 }
 
 // GET COMMANDS
@@ -205,31 +206,89 @@ func GetDisplayIntervals(netNumber *string, portname *string, timeout *int, baud
 	}
 }
 
-func GetTariffsDisplayOptions(netNumber *string, portname *string, timeout *int, baud *int) []string {
-	r := make([]string, 8)
-	m := make(map[string]string)
+func GetTariffsDisplayOptions(netNumber *string, portname *string, timeout *int, baud *int) *types.TariffsDisplayOptions {
+	c := types.TariffsDisplayOptions{}
+	p := &c
+
 	command := PrepareCommand(netNumber, 42)
 	val, res := PerformCommand(command, portname, timeout, baud, 8)
 	if res == true {
 		b := util.SplitEvery(fmt.Sprintf("%08b", val[5]), 1)
-		m["Date"] = b[0]
-		m["Time"] = b[1]
-		m["Power"] = b[2]
-		m["TSumm"] = b[3]
-		m["T4"] = b[4]
-		m["T3"] = b[5]
-		m["T2"] = b[6]
-		m["T1"] = b[7]
+		p.Date = b[0]
+		p.Time = b[1]
+		p.Power = b[2]
+		p.TSumm = b[3]
+		p.T4 = b[4]
+		p.T3 = b[5]
+		p.T2 = b[6]
+		p.T1 = b[7]
 
-		for k, v := range m {
-			if v == "1" {
-				r = append(r, k)
-			}
-		}
-		return r
+		return p
 	} else {
-		return r
+		return p
 	}
+}
+
+func GetPowerLimit(netNumber *string, portname *string, timeout *int, baud *int) int {
+	command := PrepareCommand(netNumber, 34)
+	val, res := PerformCommand(command, portname, timeout, baud, 9)
+	if res == true {
+		k, _ := strconv.Atoi(fmt.Sprintf("%0x%0x", val[5], val[6]))
+		return k * 10
+	}
+	return -1
+}
+
+func GetEnergyLimit(netNumber *string, portname *string, timeout *int, baud *int) int {
+	command := PrepareCommand(netNumber, 35)
+	val, res := PerformCommand(command, portname, timeout, baud, 9)
+	if res == true {
+		k, _ := strconv.Atoi(fmt.Sprintf("%0x%0x", val[5], val[6]))
+		return k
+	}
+	return -1
+}
+
+func GetImpOutputOptions(netNumber *string, portname *string, timeout *int, baud *int) string {
+	options := map[byte]string{
+		0: "5000 imp/h",
+		1: "10000 imp/h",
+		2: "Quartz frequency",
+		3: "Load control",
+	}
+
+	command := PrepareCommand(netNumber, 45)
+	val, res := PerformCommand(command, portname, timeout, baud, 8)
+	if res == true {
+		return options[val[5]]
+	}
+	return "FAIL"
+}
+
+func GetTariffsCount(netNumber *string, portname *string, timeout *int, baud *int) int {
+	command := PrepareCommand(netNumber, 46)
+	val, res := PerformCommand(command, portname, timeout, baud, 8)
+	if res == true {
+		return int(val[5])
+	}
+	return -1
+}
+
+func GetHolidays(netNumber *string, portname *string, timeout *int, baud *int) ([]string, error) {
+	result := make([]string, 16)
+	tail := make([]byte, 1)
+	for i := 0; i < 2; i++ {
+		tail[0] = byte(i)
+		command := PrepareSetterCommand(netNumber, 48, &tail)
+		val, res := PerformCommand(command, portname, timeout, baud, 23)
+		if res == true {
+			fmt.Println(val)
+		} else {
+			return result, errors.New("unable to fetch holidays data")
+		}
+	}
+
+	return result, nil
 }
 
 //SET COMMANDS
@@ -301,43 +360,38 @@ func SetManualCorrectionAmount(netNumber *string, portname *string, timeout *int
 	}
 }
 
-func SetTariffsDisplayOptions(netNumber *string, portname *string, timeout *int, baud *int, lst []string) bool {
+func SetTariffsDisplayOptions(netNumber *string, portname *string, timeout *int, baud *int, opt *types.TariffsDisplayOptions) bool {
 	s := []byte("00000000")
-	m := make(map[string]bool)
 
-	for _, v := range lst {
-		m[v] = true
-	}
-
-	if m["Date"] {
+	if opt.Date == "1" {
 		s[0] = 49
 	}
 
-	if m["Time"] {
+	if opt.Time == "1" {
 		s[1] = 49
 	}
 
-	if m["Power"] {
+	if opt.Power == "1" {
 		s[2] = 49
 	}
 
-	if m["TSumm"] {
+	if opt.TSumm == "1" {
 		s[3] = 49
 	}
 
-	if m["T4"] {
+	if opt.T4 == "1" {
 		s[4] = 49
 	}
 
-	if m["T3"] {
+	if opt.T3 == "1" {
 		s[5] = 49
 	}
 
-	if m["T2"] {
+	if opt.T2 == "1" {
 		s[6] = 49
 	}
 
-	if m["T1"] {
+	if opt.T1 == "1" {
 		s[7] = 49
 	}
 
@@ -348,9 +402,8 @@ func SetTariffsDisplayOptions(netNumber *string, portname *string, timeout *int,
 	_, res := PerformCommand(command, portname, timeout, baud, 7)
 	if res == true {
 		return true
-	} else {
-		return false
 	}
+	return false
 }
 
 func SetDisplayIntervals(netNumber *string, portname *string, timeout *int, baud *int, intervals *types.DisplayIntervals) bool {
@@ -364,7 +417,87 @@ func SetDisplayIntervals(netNumber *string, portname *string, timeout *int, baud
 	_, res := PerformCommand(command, portname, timeout, baud, 7)
 	if res == true {
 		return true
-	} else {
-		return false
 	}
+	return false
+}
+
+func SetPowerLimit(netNumber *string, portname *string, timeout *int, baud *int, limit int) (bool, error) {
+	tail := make([]byte, 2)
+
+	if limit <= 99999 && limit > 0 {
+		limit = limit / 10
+		h := util.SplitEvery(fmt.Sprintf("%04d", limit), 2)
+		var l int64
+
+		for i, v := range h {
+			l, _ = strconv.ParseInt(v, 16, 64)
+			tail[i] = byte(l)
+		}
+
+	} else {
+		return false, errors.New("Amount must be between 0 and 99999")
+	}
+
+	command := PrepareSetterCommand(netNumber, 3, &tail)
+	_, res := PerformCommand(command, portname, timeout, baud, 7)
+	if res == true {
+		return true, nil
+	}
+	return false, nil
+}
+
+func SetEnergyLimit(netNumber *string, portname *string, timeout *int, baud *int, limit int) (bool, error) {
+	tail := make([]byte, 2)
+
+	if limit <= 9999 && limit > 0 {
+		h := util.SplitEvery(fmt.Sprintf("%04d", limit), 2)
+		var l int64
+
+		for i, v := range h {
+			l, _ = strconv.ParseInt(v, 16, 64)
+			tail[i] = byte(l)
+		}
+
+	} else {
+		return false, errors.New("Amount must be between 0 and 9999")
+	}
+
+	command := PrepareSetterCommand(netNumber, 4, &tail)
+	_, res := PerformCommand(command, portname, timeout, baud, 7)
+	if res == true {
+		return true, nil
+	}
+	return false, nil
+}
+
+func SetImpOutputOptions(netNumber *string, portname *string, timeout *int, baud *int, option int) bool {
+	tail := make([]byte, 1)
+
+	tail[0] = byte(option)
+
+	command := PrepareSetterCommand(netNumber, 7, &tail)
+	_, res := PerformCommand(command, portname, timeout, baud, 7)
+	if res == true {
+		return true
+	}
+	return false
+}
+
+func SetTariffsCount(netNumber *string, portname *string, timeout *int, baud *int, option int) (bool, error) {
+	tail := make([]byte, 1)
+
+	if option <= 4 && option > 0 {
+		tail[0] = byte(option)
+
+	} else {
+		return false, errors.New("option must be between 1 and 4")
+	}
+
+	command := PrepareSetterCommand(netNumber, 10, &tail)
+	_, res := PerformCommand(command, portname, timeout, baud, 7)
+	if res == true {
+		return true, nil
+	}
+
+	return false, nil
 }

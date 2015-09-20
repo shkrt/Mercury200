@@ -11,8 +11,8 @@ func main() {
 	port := "COM12"
 	timeOut := 5
 	baudRate := 9600
-	//z := types.DisplayIntervals{10, 30, 15, 42}
+	//z := types.TariffsDisplayOptions{"0", "0", "1", "1", "0", "0", "1", "1"}
 
-	result := commands.GetTariffsDisplayOptions(&netNum, &port, &timeOut, &baudRate)
+	result, _ := commands.GetHolidays(&netNum, &port, &timeOut, &baudRate)
 	fmt.Println(result)
 }
