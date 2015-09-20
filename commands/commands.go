@@ -508,9 +508,12 @@ func SetTariffsCount(netNumber *string, portname *string, timeout *int, baud *in
 	return false, nil
 }
 
-func SetHolidays(netNumber *string, portname *string, timeout *int, baud *int, holidays []string) bool {
+func SetHolidays(netNumber *string, portname *string, timeout *int, baud *int, holidays []string) (bool, error) {
 	tail := make([]byte, 0)
 	const shortForm = "January,2"
+	if len(holidays) > 16 {
+		return false, errors.New("only 16 holidays supported")
+	}
 
 	for _, v := range holidays {
 		date, _ := time.Parse(shortForm, v)
@@ -520,19 +523,29 @@ func SetHolidays(netNumber *string, portname *string, timeout *int, baud *int, h
 		tail = append(tail, byte(month))
 	}
 
-	if len(tail)%16 != 0 {
-		for i := len(tail); i < 16; i++ {
+	lng := len(tail)
+	rem := lng % 16
+	if rem != 0 {
+		for i := 0; i <= 16-rem; i++ {
 			tail = append(tail, 255)
 		}
 	}
 
-	tail = append(tail, 0)
+	pcount := len(tail) / 16
 
-	command := PrepareSetterCommand(netNumber, 16, &tail)
-	_, res := PerformCommand(command, portname, timeout, baud, 7)
-	if res == true {
-		return true
+	cnt := 0
+	for j := 0; j < pcount; j++ {
+		pack := make([]byte, 16)
+		copy(pack, tail[cnt:cnt+16])
+		cnt += 16
+		pack = append(pack, byte(j))
+		command := PrepareSetterCommand(netNumber, 16, &pack)
+		_, res := PerformCommand(command, portname, timeout, baud, 7)
+
+		if res == false {
+			return false, nil
+		}
 	}
-	fmt.Println(tail)
-	return false
+
+	return true, nil
 }
