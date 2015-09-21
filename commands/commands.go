@@ -112,7 +112,8 @@ func GetLastTurnOnTime(netNumber *string, portname *string, timeout *int, baud *
 	command := PrepareCommand(netNumber, 44)
 	val, res := PerformCommand(command, portname, timeout, baud, 14)
 	if res == true {
-		return fmt.Sprintf("%02x.%02x.%02x %02x:%02x:%02x %s", val[9], val[10], val[11], val[6], val[7], val[8], time.Weekday(val[5]))
+		return fmt.Sprintf("%02x.%02x.%02x %02x:%02x:%02x %s",
+			val[9], val[10], val[11], val[6], val[7], val[8], time.Weekday(val[5]))
 	} else {
 		return ""
 	}
@@ -122,7 +123,8 @@ func GetLastTurnOffTime(netNumber *string, portname *string, timeout *int, baud 
 	command := PrepareCommand(netNumber, 43)
 	val, res := PerformCommand(command, portname, timeout, baud, 14)
 	if res == true {
-		return fmt.Sprintf("%02x.%02x.%02x %02x:%02x:%02x %s", val[9], val[10], val[11], val[6], val[7], val[8], time.Weekday(val[5]))
+		return fmt.Sprintf("%02x.%02x.%02x %02x:%02x:%02x %s",
+			val[9], val[10], val[11], val[6], val[7], val[8], time.Weekday(val[5]))
 	} else {
 		return ""
 	}
@@ -132,7 +134,8 @@ func GetCurrentTime(netNumber *string, portname *string, timeout *int, baud *int
 	command := PrepareCommand(netNumber, 33)
 	val, res := PerformCommand(command, portname, timeout, baud, 14)
 	if res == true {
-		return fmt.Sprintf("%02x.%02x.%02x %02x:%02x:%02x %s", val[9], val[10], val[11], val[6], val[7], val[8], time.Weekday(val[5]))
+		return fmt.Sprintf("%02x.%02x.%02x %02x:%02x:%02x %s",
+			val[9], val[10], val[11], val[6], val[7], val[8], time.Weekday(val[5]))
 	} else {
 		return ""
 	}
@@ -157,7 +160,8 @@ func GetLastOpenedTime(netNumber *string, portname *string, timeout *int, baud *
 	val, res := PerformCommand(command, portname, timeout, baud, 14)
 	if res == true {
 		if val[5] < 8 {
-			return fmt.Sprintf("%02x.%02x.%02x %02x:%02x:%02x %s", val[9], val[10], val[11], val[6], val[7], val[8], time.Weekday(val[5])), nil
+			return fmt.Sprintf("%02x.%02x.%02x %02x:%02x:%02x %s",
+				val[9], val[10], val[11], val[6], val[7], val[8], time.Weekday(val[5])), nil
 		} else {
 			return "--:--", nil
 		}
@@ -171,7 +175,8 @@ func GetLastClosedTime(netNumber *string, portname *string, timeout *int, baud *
 	val, res := PerformCommand(command, portname, timeout, baud, 14)
 	if res == true {
 		if val[5] < 8 {
-			return fmt.Sprintf("%02x.%02x.%02x %02x:%02x:%02x %s", val[9], val[10], val[11], val[6], val[7], val[8], time.Weekday(val[5])), nil
+			return fmt.Sprintf("%02x.%02x.%02x %02x:%02x:%02x %s",
+				val[9], val[10], val[11], val[6], val[7], val[8], time.Weekday(val[5])), nil
 		} else {
 			return "--:--", nil
 		}
