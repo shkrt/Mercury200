@@ -11,6 +11,6 @@ func main() {
 	timeOut := 5
 	baudRate := 9600
 
-	result := commands.GetInstants(&netNum, &port, &timeOut, &baudRate)
+	result, _ := commands.GetEnergyAtMonthStart(&netNum, &port, &timeOut, &baudRate, 11)
 	fmt.Println(result)
 }

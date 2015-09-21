@@ -72,7 +72,7 @@ func GetVersion(netNumber *string, portname *string, timeout *int, baud *int) st
 	if res == true {
 		return fmt.Sprintf("%0x.%0x.%0x (%02x.%02x.%02x)", val[5], val[6], val[7], val[8], val[9], val[10])
 	} else {
-		return "FAIL"
+		return ""
 	}
 }
 
@@ -84,7 +84,7 @@ func GetSerial(netNumber *string, portname *string, timeout *int, baud *int) str
 		d, _ := strconv.ParseInt(s, 16, 64)
 		return fmt.Sprint(d)
 	} else {
-		return "FAIL"
+		return ""
 	}
 }
 
@@ -94,7 +94,7 @@ func GetBatteryVoltage(netNumber *string, portname *string, timeout *int, baud *
 	if res == true {
 		return fmt.Sprintf("%0x.%0x V", val[5], val[6])
 	} else {
-		return "FAIL"
+		return ""
 	}
 }
 
@@ -104,7 +104,7 @@ func GetProductionDate(netNumber *string, portname *string, timeout *int, baud *
 	if res == true {
 		return fmt.Sprintf("%02x.%02x.%02x", val[5], val[6], val[7])
 	} else {
-		return "FAIL"
+		return ""
 	}
 }
 
@@ -114,7 +114,7 @@ func GetLastTurnOnTime(netNumber *string, portname *string, timeout *int, baud *
 	if res == true {
 		return fmt.Sprintf("%02x.%02x.%02x %02x:%02x:%02x %s", val[9], val[10], val[11], val[6], val[7], val[8], time.Weekday(val[5]))
 	} else {
-		return "FAIL"
+		return ""
 	}
 }
 
@@ -124,7 +124,7 @@ func GetLastTurnOffTime(netNumber *string, portname *string, timeout *int, baud 
 	if res == true {
 		return fmt.Sprintf("%02x.%02x.%02x %02x:%02x:%02x %s", val[9], val[10], val[11], val[6], val[7], val[8], time.Weekday(val[5]))
 	} else {
-		return "FAIL"
+		return ""
 	}
 }
 
@@ -134,7 +134,7 @@ func GetCurrentTime(netNumber *string, portname *string, timeout *int, baud *int
 	if res == true {
 		return fmt.Sprintf("%02x.%02x.%02x %02x:%02x:%02x %s", val[9], val[10], val[11], val[6], val[7], val[8], time.Weekday(val[5]))
 	} else {
-		return "FAIL"
+		return ""
 	}
 }
 
@@ -148,7 +148,7 @@ func GetSeasonSwitchFlag(netNumber *string, portname *string, timeout *int, baud
 			return "Switch is enabled"
 		}
 	} else {
-		return "FAIL"
+		return ""
 	}
 }
 
@@ -162,7 +162,7 @@ func GetLastOpenedTime(netNumber *string, portname *string, timeout *int, baud *
 			return "--:--", nil
 		}
 	} else {
-		return "FAIL", errors.New("No data")
+		return "", errors.New("No data")
 	}
 }
 
@@ -176,7 +176,7 @@ func GetLastClosedTime(netNumber *string, portname *string, timeout *int, baud *
 			return "--:--", nil
 		}
 	} else {
-		return "FAIL", errors.New("No data")
+		return "", errors.New("No data")
 	}
 }
 
@@ -186,7 +186,7 @@ func GetManualCorrectionAmount(netNumber *string, portname *string, timeout *int
 	if res == true {
 		return fmt.Sprintf("%02d", val[5])
 	} else {
-		return "FAIL"
+		return ""
 	}
 }
 
@@ -262,7 +262,7 @@ func GetImpOutputOptions(netNumber *string, portname *string, timeout *int, baud
 	if res == true {
 		return options[val[5]]
 	}
-	return "FAIL"
+	return ""
 }
 
 func GetTariffsCount(netNumber *string, portname *string, timeout *int, baud *int) int {
