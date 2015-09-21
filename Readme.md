@@ -49,7 +49,8 @@
 
 *запрос значений накопленной энергии по тарифам на начало 11 месяца*
 
-```package main
+```go
+package main
 
 import (
 	"fmt"
@@ -64,8 +65,10 @@ func main() {
 
 	result, _ := commands.GetEnergyAtMonthStart(&netNum, &port, &timeOut, &baudRate, 11)
 	fmt.Println(result)
-}```
+}
+```
 
-```$ go run test.go
+```shell
+$ go run main.go
 &{0684.92 0342.65 000.0 000.0}
 ```
