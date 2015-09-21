@@ -65,10 +65,16 @@ func main() {
 
 	result, _ := commands.GetEnergyAtMonthStart(&netNum, &port, &timeOut, &baudRate, 11)
 	fmt.Println(result)
+
+	fmt.Printf("Тариф 1: %s кВт\n", result.T1)
+	fmt.Printf("Тариф 2: %s кВт", result.T2)
 }
 ```
 
 ```shell
 $ go run main.go
 &{0684.92 0342.65 000.0 000.0}
+Тариф 1: 0684.92 кВт
+Тариф 2: 0342.65 кВт
 ```
+
