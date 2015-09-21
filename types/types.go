@@ -11,3 +11,7 @@ type TariffsDisplayOptions struct {
 type Energy struct {
 	T1, T2, T3, T4 string
 }
+
+type Instants struct {
+	P, U, I string
+}

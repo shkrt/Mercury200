@@ -336,6 +336,23 @@ func GetEnergyAtMonthStart(netNumber *string, portname *string, timeout *int, ba
 	return p, nil
 }
 
+func GetInstants(netNumber *string, portname *string, timeout *int, baud *int) *types.Instants {
+	values := types.Instants{}
+	p := &values
+	command := PrepareCommand(netNumber, 99)
+	val, res := PerformCommand(command, portname, timeout, baud, 14)
+	if res == true {
+		v, _ := strconv.ParseFloat(fmt.Sprintf("%x%x", val[5], val[6]), 32)
+		p.U = fmt.Sprint(v / 10)
+		v, _ = strconv.ParseFloat(fmt.Sprintf("%x%x", val[7], val[8]), 32)
+		p.I = fmt.Sprint(v / 10)
+		v, _ = strconv.ParseFloat(fmt.Sprintf("%x%x%x", val[9], val[10], val[11]), 32)
+		p.P = fmt.Sprint(v)
+	}
+	return p
+
+}
+
 //SET COMMANDS
 
 func SetCurrentTime(netNumber *string, portname *string, timeout *int, baud *int, timeToSet time.Time) bool {
