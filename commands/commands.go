@@ -37,7 +37,7 @@ func PerformCommand(command []byte, portname *string, timeout *int, baud *int, r
 	c := &serial.Config{Name: *portname, Baud: *baud, ReadTimeout: time.Second * time.Duration(*timeout)}
 
 	s, err := serial.OpenPort(c)
-
+	
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -336,7 +336,10 @@ func GetEnergyAtMonthStart(netNumber *string, portname *string, timeout *int, ba
 		p.T2 = fmt.Sprintf("%x%x%x.%x", val[9], val[10], val[11], val[12])
 		p.T3 = fmt.Sprintf("%x%x%x.%x", val[13], val[14], val[15], val[16])
 		p.T4 = fmt.Sprintf("%x%x%x.%x", val[17], val[18], val[19], val[20])
+	}else{
+		return p, errors.New("CRC Check error")
 	}
+
 
 	return p, nil
 }
