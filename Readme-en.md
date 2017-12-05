@@ -1,4 +1,4 @@
-# mercury200
+# Mercury200
 
 ----
 Implementation of Mercury-200 power meter's exchange protocol.
